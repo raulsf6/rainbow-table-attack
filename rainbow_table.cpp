@@ -66,7 +66,7 @@ void build_chain(int chain_length, FILE* fd){
 	while(i<chain_length-1){
 		out = hash_function(out, str);
 		base64 = reduce(base64, out, i);
-		cout << base64 << endl;
+		//cout << base64 << endl;
 		str = base64;
 		i++;
 	}
