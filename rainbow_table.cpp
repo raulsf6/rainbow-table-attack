@@ -66,13 +66,32 @@ void build_chain(int chain_length, FILE* fd){
 	while(i<chain_length-1){
 		out = hash_function(out, str);
 		base64 = reduce(base64, out, i);
-		//cout << base64 << endl;
 		str = base64;
 		i++;
 	}
 	out = hash_function(out, str);
 	fprint_hash(out,32,fd);
 	delete[] first_pass;
+	delete[] out;
+	delete[] base64;
+}
+
+void print_chain(int chain_length, char* first_pass){
+	uint8_t* out = new uint8_t[32];
+	char *base64 = new char[7];
+	int i = 0;
+	printf("%s\n",first_pass);
+	char* str = first_pass;
+	while(i<chain_length-1){
+		out = hash_function(out, str);
+		print_hash(out,32);
+		base64 = reduce(base64, out, i);
+		printf("%s\n",base64);
+		str = base64;
+		i++;
+	}
+	out = hash_function(out, str);
+	print_hash(out,32);
 	delete[] out;
 	delete[] base64;
 }
@@ -86,8 +105,11 @@ bool findPassInChain(unordered_map<string, string> hashMap, string chain_start, 
 	uint8_t murmur_hash[16];
 	int i = 0;
 	while(!found && i < CHAIN_LENGTH){
-		blake256_hash(out, (uint8_t*)base64, 6);
+		hash_function(out, base64);
+		cout << base64 << "\n";
+		
 		transform_uint8_t_array_to_string(out,hash2);
+		cout << hash2 << "\n";
 		if(hash1.compare(hash2) == 0){
 			found = true;
 			cout << "Found solution for " << hash1 << "! Pass: " << base64 << endl;
@@ -133,17 +155,12 @@ bool searchHash(unordered_map<string, string> hashMap, string hash1){
 			chain_start = it->second;
 			if (findPassInChain(hashMap, chain_start, original_hash) == true){
 				return true;
-			} else { //Not found in chain
-				hash1 = original_hash;
-				//Reduce-Hash CHAIN_LENGTH-1-i times
-				transform_string_to_uint8_t_array(out, hash1);
-				for (int j = 0; j < CHAIN_LENGTH-i-1; j++){
-					base64 = reduce(base64, out, i+j);
-					out = hash_function(out, base64);
-				}
-				transform_uint8_t_array_to_string(out, hash1);
-				i--;
 			}
+			else
+			{
+				return false;
+			}
+			
 		} else { //Not found in Map
 			hash1 = original_hash;
 			//Reduce-Hash CHAIN_LENGTH-1-i times

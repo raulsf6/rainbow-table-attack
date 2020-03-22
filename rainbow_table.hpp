@@ -35,4 +35,5 @@ bool searchHash(unordered_map<string, string>, string);
 bool findPassInChain(unordered_map<string, string>, string, string);
 void transform_uint8_t_array_to_string(uint8_t*, string&);
 void transform_string_to_uint8_t_array(uint8_t*, string&);
+void print_chain(int, char*);
 uint8_t* hash_function(uint8_t*, char*);
