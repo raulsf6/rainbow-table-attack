@@ -25,7 +25,7 @@ int main (int argc, char* argv[]){
 	string pass, hash;
 	unordered_map<string, string> hashMap;
 	int id, numprocs;
-	int size;
+	int size, chunk;
 	
 	while(!file.eof()){	//Build Map. BUILD DIFFERENT MAP FOR EACH DIFFERENT THREAD - READ NUMBER OF LINES, DISTRIBUTE THEM BETWEEN PROCESSES
 		file >> pass;
@@ -37,12 +37,11 @@ int main (int argc, char* argv[]){
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &id);
-	
-	cout << "Soy " + to_string(id) + " " + (*hashMap.begin()).first + "\n";
 
 	string hash2;
 	MPI_Status status;
 	vector<string> hashes;
+	char* buffer;
 
 	if (id == 0 ){
 		//Read hashes to crack
@@ -51,8 +50,9 @@ int main (int argc, char* argv[]){
 			hashes.push_back(hash2);
 		}
 		
-		//Get size
+		//Get size and chunk
 		size = hashes.size()*64;
+		chunk = size/numprocs;
 		
 		//Debug
 		int total_length = 0;
@@ -66,29 +66,36 @@ int main (int argc, char* argv[]){
 		
 		//Send size
 		for (int i = 1; i < numprocs; i++){
-			MPI_Send(&size, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+			MPI_Send(&chunk, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
 		}
 		
 		//Send vector
-		for (int i = 1; i < numprocs; i++){
-			MPI_Send(hashes[0].c_str(), size, MPI_CHAR, i, 0, MPI_COMM_WORLD);
-		}	
+		for (int i = 0; i < numprocs; i++){
+			int to_start = i * hashes.size() / numprocs;
+			if (i == 0){ //Copy my own buffer
+				buffer = new char[chunk];
+				strcpy(buffer, hashes[to_start].c_str());
+			}
+			else{
+				MPI_Send(hashes[to_start].c_str(), chunk, MPI_CHAR, i, 0, MPI_COMM_WORLD);
+			}
+			hashes.empty();
+		}
 	}
 	else {
-		MPI_Recv(&size, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-		cout << "SOY " + to_string(id) + " SIZE A LEER " + to_string(size) + "\n";
-		char* buffer = new char[size];
-		//hashes.reserve(size);
+		MPI_Recv(&chunk, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		cout << "SOY " + to_string(id) + " SIZE A LEER " + to_string(chunk) + "\n";
+		buffer = new char[chunk];
 		cout << "RESERVO" << "\n";
-		MPI_Recv(buffer, size, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		MPI_Recv(buffer, chunk, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+	}
 
-		cout << "SOY " + to_string(id) + " TAMAÑO DE VECTOR " + "\n";
+	cout << "SOY " + to_string(id) + " TAMAÑO DE VECTOR " + "\n";
 		for (int i = 0; i < 64; i++){
 			cout << buffer[i];
 			
 		}
 		cout << "\n";
-	}
 	
 	MPI_Finalize();
 
