@@ -17,7 +17,7 @@
 #include <string>
 #include <pthread.h>
 #define NUM_OF_CHAINS 1000000
-#define CHAIN_LENGTH 500
+#define CHAIN_LENGTH 1000
 #define BLOCK256 64
 
 using namespace std;

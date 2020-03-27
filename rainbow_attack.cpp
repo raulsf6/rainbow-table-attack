@@ -21,6 +21,7 @@ int main (int argc, char* argv[]){
 	ifstream file(rainbow_path);
 	ifstream hash_file(hash_path);
 	string pass, hash;
+	
 	unordered_map<string, string> hashMap;
 	while(!file.eof()){	//Build Map. BUILD DIFFERENT MAP FOR EACH DIFFERENT THREAD - READ NUMBER OF LINES, DISTRIBUTE THEM BETWEEN PROCESSES
 		file >> pass;
@@ -28,6 +29,7 @@ int main (int argc, char* argv[]){
 		hashMap.insert(pair<string, string>(hash,pass));
 	}
 	char str[65];
+	
 	while(!hash_file.eof()){ //Read hashes to crack
 		string hash2;
 		hash_file >> hash2;

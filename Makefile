@@ -48,10 +48,6 @@ blake256.o: blake256.cpp blake.h
 base64.o: base64.cpp base64.h
 	$(CC) $(FLAGS) base64.cpp
 
-# hextobase64.o: hextobase64.cpp
-# 	$(CC) $(FLAGS) hextobase64.cpp
-
-# clean house
 clean:
 	rm -f $(OUTBUILD) $(OBJSATTACK) $(OUT)
 

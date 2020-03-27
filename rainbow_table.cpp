@@ -61,14 +61,20 @@ void build_chain(int chain_length, FILE* fd){
 	uint8_t* out = new uint8_t[32];
 	char *base64 = new char[7];
 	int i = 0;
-	fprintf(fd, "%s\t",first_pass);
 	char* str = first_pass;
+	// Print first pass and tab in file
+	fprintf(fd, "%s\t", str);
+	// Print first hash in stdout
+	uint8_t* first_hash = hash_function(out, str);
+	print_hash(first_hash, 32);
+	//Calculate chain
 	while(i<chain_length-1){
 		out = hash_function(out, str);
 		base64 = reduce(base64, out, i);
 		str = base64;
 		i++;
 	}
+	// Print last chain hash in file
 	out = hash_function(out, str);
 	fprint_hash(out,32,fd);
 	delete[] first_pass;
@@ -106,10 +112,7 @@ bool findPassInChain(unordered_map<string, string> hashMap, string chain_start, 
 	int i = 0;
 	while(!found && i < CHAIN_LENGTH){
 		hash_function(out, base64);
-		cout << base64 << "\n";
-		
 		transform_uint8_t_array_to_string(out,hash2);
-		cout << hash2 << "\n";
 		if(hash1.compare(hash2) == 0){
 			found = true;
 			cout << "Found solution for " << hash1 << "! Pass: " << base64 << endl;
