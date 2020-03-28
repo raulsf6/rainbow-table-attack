@@ -13,15 +13,12 @@ argv[1]: rainbow table file path
 argv[2]: hashes to crack file path
 */
 
-//Se que el primer string mide 6 y el segundo lo que mida BLAKE (puedo calcular tamaño de vector)
-
 int main (int argc, char* argv[]){
 	char rainbow_table[50];
 	int table_number = atoi(argv[1]);
 	string rainbow_path(argv[1]);
 	string hash_path (argv[2]);
 	ifstream file(rainbow_path);
-	ifstream hash_file(hash_path);
 	string pass, hash;
 	unordered_map<string, string> hashMap;
 	int id, numprocs;
@@ -41,70 +38,40 @@ int main (int argc, char* argv[]){
 	string hash2;
 	MPI_Status status;
 	vector<string> hashes;
-	char* buffer;
+	string buffer;
+	ifstream hash_file(hash_path, fstream::binary);
+	int lines;
+	int lines_per_process;
+	if (hash_file){
+		//Get file size
+		hash_file.seekg(0, hash_file.end);
+		size = hash_file.tellg();
+		hash_file.seekg(0, hash_file.beg);
 
-	if (id == 0 ){
-		//Read hashes to crack
-		while(!hash_file.eof()){ 
-			hash_file >> hash2;
-			hashes.push_back(hash2);
+		//Discard last lines
+		lines = size / 65;
+		lines_per_process = lines / numprocs;
+
+		//Read your corresponding lines
+		hash_file.seekg(id*lines_per_process*65, hash_file.beg);
+		
+		for (int i = 0; i < lines_per_process; i++){
+			hash_file >> buffer;
+			hashes.push_back(buffer);
 		}
-		
-		//Get size and chunk
-		size = hashes.size()*64;
-		chunk = size/numprocs;
-		
+
 		//Debug
-		int total_length = 0;
-		int total_capacity = 0;
+		string first_hash = hashes[0];
+		string sencond_hash = hashes[1];
+		cout << "SOY " + to_string(id) + " FIRST HASH: " + first_hash + "\n";
+		cout << "SOY " + to_string(id) + " SECOND HASH: " + sencond_hash + "\n";
+		
+		//Crack hashes
 		for (auto it = hashes.begin(); it != hashes.end(); ++it){
-			total_length += (*it).length();
-			total_capacity += (*it).capacity();
+			searchHash(hashMap, *it);
 		}
-		cout << "TAMAÑO DE VECTOR " + to_string(total_length) + "\n";
-		cout << "CAPACITY " + to_string(total_capacity) + "\n";
-		
-		//Send size
-		for (int i = 1; i < numprocs; i++){
-			MPI_Send(&chunk, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-		}
-		
-		//Send vector
-		for (int i = 0; i < numprocs; i++){
-			int to_start = i * hashes.size() / numprocs;
-			if (i == 0){ //Copy my own buffer
-				buffer = new char[chunk];
-				strcpy(buffer, hashes[to_start].c_str());
-			}
-			else{
-				MPI_Send(hashes[to_start].c_str(), chunk, MPI_CHAR, i, 0, MPI_COMM_WORLD);
-			}
-			hashes.empty();
-		}
-	}
-	else {
-		MPI_Recv(&chunk, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-		cout << "SOY " + to_string(id) + " SIZE A LEER " + to_string(chunk) + "\n";
-		buffer = new char[chunk];
-		cout << "RESERVO" << "\n";
-		MPI_Recv(buffer, chunk, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-	}
 
-	cout << "SOY " + to_string(id) + " TAMAÑO DE VECTOR " + "\n";
-		for (int i = 0; i < 64; i++){
-			cout << buffer[i];
-			
-		}
-		cout << "\n";
-	
+	}
 	MPI_Finalize();
-
-	/*
-	1 - Todos leen el hashfile
-	2 - 0 lee hashfile y reparte ----> CHOSEN
-	3 - Cada uno lee su parte de hashfile
-	*/
-
-	
 }
 
