@@ -38,3 +38,4 @@ rainbow
 build_rainbow_table
 rainbow_attack
 rainbow_attack_parallel
+test_blake
