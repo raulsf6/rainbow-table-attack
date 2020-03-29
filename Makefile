@@ -14,9 +14,10 @@ OUTATTACK  	= rainbow_attack
 OUTBLAKE	= test_blake
 OUTATTACKPAR	= rainbow_attack_parallel
 CC		= g++
-MPI		= mpicxx
-FLAGS 	= -c -g -O2 -std=c++11
-LFLAGS 	= -L/gmp_install/lib -lgmp -lpthread -lm -lssl -lcrypto
+MPI		= mpic++
+FLAGS 	= -c -g -O2 -std=c++11 -I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi --static
+LFLAGS 	= -L/gmp_install/lib -lgmp -lpthread -lm -lssl -lcrypto 
+MPILFLAGS = -L/usr/lib/x86_64-linux-gnu/openmpi/lib -lgmp -lpthread -lm -lssl -lcrypto
 # -g option enables debugging mode 
 # -c flag generates object code for separate files
 
@@ -32,7 +33,7 @@ BLAKE: $(OBJSBLAKE)
 	$(CC) $(OBJSBLAKE) $(LFLAGS) -o $(OUTBLAKE)
 
 ATTACK_PARALLEL: $(OBJSATTACKPAR)
-	$(MPI) $(OBJSATTACKPAR) $(LFLAGS) -o $(OUTATTACKPAR)
+	$(MPI) $(OBJSATTACKPAR) $(MPILFLAGS) -o $(OUTATTACKPAR)
 
 
 # create/compile the individual files >>separately<< 

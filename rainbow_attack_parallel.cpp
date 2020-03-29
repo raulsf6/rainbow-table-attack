@@ -23,6 +23,7 @@ int main (int argc, char* argv[]){
 	unordered_map<string, string> hashMap;
 	int id, numprocs;
 	int size, chunk;
+	int total_cracked;
 	
 	while(!file.eof()){	//Build Map. BUILD DIFFERENT MAP FOR EACH DIFFERENT THREAD - READ NUMBER OF LINES, DISTRIBUTE THEM BETWEEN PROCESSES
 		file >> pass;
@@ -34,14 +35,15 @@ int main (int argc, char* argv[]){
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &id);
-
-	string hash2;
 	MPI_Status status;
+
 	vector<string> hashes;
 	string buffer;
 	ifstream hash_file(hash_path, fstream::binary);
 	int lines;
 	int lines_per_process;
+	int cracked = 0;
+
 	if (hash_file){
 		//Get file size
 		hash_file.seekg(0, hash_file.end);
@@ -51,6 +53,8 @@ int main (int argc, char* argv[]){
 		//Discard last lines
 		lines = size / 65;
 		lines_per_process = lines / numprocs;
+		if (id == numprocs -1)
+			lines_per_process += lines % numprocs;
 
 		//Read your corresponding lines
 		hash_file.seekg(id*lines_per_process*65, hash_file.beg);
@@ -63,15 +67,25 @@ int main (int argc, char* argv[]){
 		//Debug
 		string first_hash = hashes[0];
 		string sencond_hash = hashes[1];
+		cout << "SOY " + to_string(id) + " LEO: " + to_string(lines_per_process) + "\n";
 		cout << "SOY " + to_string(id) + " FIRST HASH: " + first_hash + "\n";
 		cout << "SOY " + to_string(id) + " SECOND HASH: " + sencond_hash + "\n";
 		
 		//Crack hashes
 		for (auto it = hashes.begin(); it != hashes.end(); ++it){
-			searchHash(hashMap, *it);
+			if(searchHash(hashMap, *it))
+				cracked++;
+			
 		}
 
+		//test	
+
+		MPI_Reduce( &cracked, &total_cracked, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+		if (id == 0)
+			cout << "TOTAL CRACKED: " + to_string(total_cracked);
 	}
+	
 	MPI_Finalize();
 }
 

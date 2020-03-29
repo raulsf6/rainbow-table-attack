@@ -115,13 +115,11 @@ bool findPassInChain(unordered_map<string, string> hashMap, string chain_start, 
 		transform_uint8_t_array_to_string(out,hash2);
 		if(hash1.compare(hash2) == 0){
 			found = true;
-			cout << "Found solution for " << hash1 << "! Pass: " << base64 << endl;
-			return true;
 		}
 		base64 = reduce(base64, out, i);
 		i++;
 	}
-	return false;
+	return found;
 }
 
 void transform_string_to_uint8_t_array(uint8_t* out, string& hash){
